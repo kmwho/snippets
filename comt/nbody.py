@@ -190,7 +190,32 @@ def writeToFile(system,filename):
 			f.write(', ' + str(b.v)[1:-1])
 			f.write('\n')
 
+def showAnimation(integ,n=500,dt=1e-3,showEvery=10,**kargs):
+	# integ -> Integrator bound to a system
+	S   = integ
+	sys = S.sys
+	tstart = S.t
+	fig = pl.figure()
+	if 'axlim' in kargs:
+		ax  = pl.axes(xlim=kargs['axlim'][0], ylim=kargs['axlim'][1])
+	else:
+		ax  = pl.axes()
+	pl.grid()
+	col = kargs['color'] if 'color' in kargs else np.random.random(len(sys.bodies))
+	X = [b.r[0] for b in sys.bodies]
+	Y = [b.r[1] for b in sys.bodies]
+	scat, = pl.plot(X,Y,'o',c=col)
+	def update_plot(i,S,scat):
+		#dt = 2e-3
+		S.integrateTo(i*showEvery*dt+tstart,dt)
+		X = [b.r[0] for b in S.sys.bodies]
+		Y = [b.r[1] for b in S.sys.bodies]
+		scat.set_xdata(X)
+		scat.set_ydata(Y)
 
+	ani = animation.FuncAnimation(fig, update_plot, frames=n, interval = 10, fargs=(S,scat))
+	ani.save('output/basic_animation.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+	pl.show()
 
 
 

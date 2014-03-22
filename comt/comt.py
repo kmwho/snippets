@@ -10,7 +10,9 @@ def main():
 	sys  = nbody.systemFromFile('bodies.dat')
 	S    = nbody.RungeKutta4(sys,2433282.5*days) # initial day
 	S.integrateTo(2440587.5*days,0.5*days)
+	#nbody.showAnimation(S,7305//5,1*days,5,axlim=[(-1e9,1e9),(-1e9, 1e9)]) #Simulation is for 7305 days
 	nbody.writeToFile(sys,'output.dat')
+
 
 if __name__ == '__main__':
 	main()

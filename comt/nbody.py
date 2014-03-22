@@ -5,7 +5,8 @@ import pylab as pl
 from matplotlib import animation
 
 #G = 6.67384e-11 # m3 kg-1 s-2
-G = 1
+G = 6.67384e-20 # km3 kg-1 s-2
+#G = 1
 
 options = {
 	"plot": True
@@ -41,6 +42,8 @@ class System:
 class Combinations:
 	@staticmethod
 	def pairs(n):
+		"""Give all possible pairs of numbers from 1 to n
+		   TODO change this to iterator"""
 		return [(j,i) for i in range(1,n) for j in range(i) ]
 
 class Integrator(object):
@@ -62,18 +65,19 @@ class Symplectic(Integrator):
 		super(Symplectic,self).__init__(sys, t)
 
 	def step(self,dt):
+		"""Step by dt"""
 		bodies = self.sys.bodies
 		pairs  = self.sys.pairs()
-		for i in range(self.order):
-			for b in bodies:
+		for i in range(self.order):         #Number of passes is same as the order
+			for b in bodies:                #Step Pos
 				b.r += b.v*self.c[i]*dt
 			[b.cleara() for b in bodies]
-			for (b0,b1) in pairs:
-				r  = b0.r - b1.r
+			for (b0,b1) in pairs:           #Get predicted accel
+				r  = b0.r - b1.r            #TODO seperate derivative functions from integrator
 				a  = G/np.dot(r,r)**(3/2)
 				b0.a -= a*r*b1.m
 				b1.a += a*r*b0.m
-			for b in bodies:
+			for b in bodies:                #Step Vel
 				b.v += b.a*self.d[i]*dt
 		self.t += dt
 
@@ -160,6 +164,7 @@ class RungeKutta4(RungeKutta):
 		self._updateSystem(Y)
 		return self.sys
 
+
 def systemFromFile(filename):
 	bodies = []
 	with open(filename,'r') as f:
@@ -186,52 +191,14 @@ def writeToFile(system,filename):
 			f.write('\n')
 
 
-def plotSystem(sys,**kargs):
-	if not options["plot"]:
-		return
-	X = [b.r[0] for b in sys.bodies]
-	Y = [b.r[1] for b in sys.bodies]
-	return pl.scatter(X,Y,**kargs)
 
-def showPlot():
-	if not options["plot"]:
-		return
-	pl.grid()
-	pl.show()
 
-def showAnimation(integScheme=Symplectic4,n=500,dt=1e-3):
-	sys = systemFromFile('bodies.dat')
-	S   = integScheme(sys)
-	fig = pl.figure()
-	pl.grid()
-	ax  = pl.axes(xlim=(-1.5, 1.5), ylim=(-0.5, 0.5))
-	col = np.random.random(3)
-	X = [b.r[0] for b in sys.bodies]
-	Y = [b.r[1] for b in sys.bodies]
-	scat, = pl.plot(X,Y,'o',c=col)
-	def update_plot(i,S,scat):
-		#dt = 2e-3
-		S.integrateTo(i*10*dt,dt)
-		X = [b.r[0] for b in S.sys.bodies]
-		Y = [b.r[1] for b in S.sys.bodies]
-		scat.set_xdata(X)
-		scat.set_ydata(Y)
 
-	ani = animation.FuncAnimation(fig, update_plot, frames=n, interval = 10, fargs=(S,scat))
-	ani.save('output/basic_animation.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
-	pl.show()
 
 
 def main():
-	sys = systemFromFile('bodies.dat')
-	S   = RungeKutta4(sys)
-	plotSystem(sys,s=80,marker='o')
-	for i in xrange(200):
-		S.integrateTo(i,1e-1)
-		plotSystem(sys,s=80,marker='+')
-	showPlot()
-	writeToFile(sys,'output/output.dat')
+	pass
 
 
 if __name__ == '__main__':
-	showAnimation(RungeKutta4,200, 2e-3)
+	main()

@@ -131,11 +131,14 @@ class RungeKutta4(RungeKutta):
 			Y[i,:3] = bodies[i].r
 			Y[i,3:] = bodies[i].v
 		return Y
-	def _updateSystem(self,Y):
+	def _updateSystem(self,Y,Ydot=None):
 		bodies = self.sys.bodies
+		if Ydot is None:
+			Ydot = self._Ydot(Y,[b.m for b in bodies])
 		for i in xrange(len(bodies)):
 			bodies[i].r = Y[i,:3]
 			bodies[i].v = Y[i,3:]
+			bodies[i].a = Ydot[i,3:]
 
 	def step(self,dt,Y=None,m=None):
 		if Y is None:
@@ -203,13 +206,13 @@ def showAnimation(integ,n=500,dt=1e-3,showEvery=10,**kargs):
 	pl.grid()
 	col = kargs['color'] if 'color' in kargs else np.random.random(len(sys.bodies))
 	X = [b.r[0] for b in sys.bodies]
-	Y = [b.r[1] for b in sys.bodies]
+	Y = [b.r[2] for b in sys.bodies]
 	scat, = pl.plot(X,Y,'o',c=col)
 	def update_plot(i,S,scat):
 		#dt = 2e-3
 		S.integrateTo(i*showEvery*dt+tstart,dt)
 		X = [b.r[0] for b in S.sys.bodies]
-		Y = [b.r[1] for b in S.sys.bodies]
+		Y = [b.r[2] for b in S.sys.bodies]
 		scat.set_xdata(X)
 		scat.set_ydata(Y)
 
